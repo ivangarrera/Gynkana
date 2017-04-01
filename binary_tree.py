@@ -1,6 +1,5 @@
 import node_binary_tree
 
-
 class BinaryTree:
 
     def __init__(self, root):
