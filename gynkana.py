@@ -9,6 +9,7 @@ import struct
 import re
 import tokenize
 from io import StringIO
+import math
 
 addr_uclm_server = ('atclab.esi.uclm.es', 2000)
 secret_connexion_number = 0
@@ -53,21 +54,27 @@ def step2():
     while(1):
         data = sock.recv(1600)
         print(data.decode())
-        result = crear_arbol(data.decode())
-        result = int(result)
+        var = split_ecuacion(data.decode())
+        if var[0] != "(" and var[0] != "[" and var[0] != "{" and var[0] != "ERROR":
+            break
+        result = int(crear_arbol(data.decode()))
         string = "("+str(result)+")"
         print("Result is {0}".format(result))
         sock.sendall(string.encode())
 
-def crear_arbol(expresion):
+def split_ecuacion(cadena):
     list = []
     patron = re.compile("\s")
-    tupla = patron.subn("", expresion)
+    tupla = patron.subn("", cadena)
     """ FROM HERE """
     for token in tokenize.generate_tokens(StringIO(tupla[0]).readline):
         if token[1]:
             list.append(token[1])
             """ TO HERE, copied from http://stackoverflow.com/questions/24042517/splitting-a-python-string-by-math-expressions """
+    return list
+
+def crear_arbol(expresion):
+    list = split_ecuacion(expresion)
     salida = infijo_to_postfijo(list)
     print(salida)
     elementos = []
@@ -85,7 +92,6 @@ def crear_arbol(expresion):
     result = evaluar_expresion(elementos.pop())
     return result
 
-
 def evaluar_expresion(node):
     result = 0
     if node.get_right() is None and node.get_left() is None:
@@ -101,7 +107,7 @@ def evaluar_expresion(node):
         elif op == "*":
             result = left * right
         elif op == "/":
-            result = left / right
+            result = math.floor(left/right)
     return result
 
 def print_expression(node):
@@ -121,13 +127,16 @@ def infijo_to_postfijo(expression):
     pila = []
     salida = []
     for i in expression:
+        times = 0
         if i == "(" or i == "[" or i == "{":
             pila.append(i)
         elif i == ")" or i == "]" or i == "}":
             for x in pila:
-                if pila[len(pila)-1] != "(" and pila[len(pila)-1] != "[" and pila[len(pila)-1] != "{":
+                if pila != [] and pila[len(pila)-1] != "(" and pila[len(pila)-1] != "[" and pila[len(pila)-1] != "{":
                     salida.append(pila.pop())
-                if pila != [] and pila[len(pila)-1] != "+" and pila[len(pila)-1] != "-" and pila[len(pila)-1] != "*" and pila[len(pila)-1] != "/":
+                if pila != [] and pila[len(pila)-1] != "+" and pila[len(pila)-1] != "-" and pila[len(pila)-1] != "*"\
+                        and pila[len(pila)-1] != "/" and is_parentesis_opuesto(i, pila[len(pila)-1]) and times < 1:
+                    times += 1
                     pila.pop()
         elif i == "*" or i == "/":
             pila.append(i)
@@ -140,7 +149,7 @@ def infijo_to_postfijo(expression):
                 pila.append(i)
             elif pila[len(pila)-1] == "*" or pila[len(pila)-1] == "/":
                 n_list = []
-                while pila[len(pila)-1] == "*" or pila[len(pila)-1] == "/":
+                while pila[len(pila) - 1] == "*" or pila[len(pila) - 1] == "/":
                     n_list.append(pila.pop())
                 pila.append(i)
                 for x in n_list:
@@ -148,6 +157,16 @@ def infijo_to_postfijo(expression):
         else:
             salida.append(i)
     return salida
+
+def is_parentesis_opuesto(parentesis1, parentesis2):
+    if (parentesis1 == "(" and parentesis2 == ")") or (parentesis1 == ")" and parentesis2 == "("):
+        return True
+    elif (parentesis1 == "[" and parentesis2 == "]") or (parentesis1 == "]" and parentesis2 == "["):
+        return True
+    elif (parentesis1 == "{" and parentesis2 == "}") or (parentesis1 == "}" and parentesis2 == "{"):
+        return True
+    else:
+        return False
 
 if __name__ == "__main__":
     step0()
