@@ -5,9 +5,8 @@ import socket
 import gynkana_operations
 import httplib2
 import struct
-
-addr_uclm_server = ('atclab.esi.uclm.es', 2000)
-
+import icmp_checksum
+import time
 
 def step0():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -28,10 +27,12 @@ def step1(secret_connexion_number):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     server_address = ('', 50000)
     sock.bind(server_address)
+    address = ('atclab.esi.uclm.es', 2000)
 
     msg = str(secret_connexion_number) + " 50000"
-    sock.sendto(msg.encode(), addr_uclm_server)
+    sock.sendto(msg.encode(), address)
     data, information = sock.recvfrom(1600)
+    print(data.decode())
     sock.close()
     return int(data.decode().splitlines()[0])
 
@@ -42,28 +43,39 @@ def step2(port):
     sock.connect(mathematical_server)
 
     while 1:
-        data = sock.recv(1600)
-        print(data.decode())
-        var = gynkana_operations.split_ecuacion(data.decode())
-        if var[0] != "(" and var[0] != "[" and var[0] != "{" and var[0] != "ERROR":
+        """data = sock.recv(1600)"""
+        data = recv_all_data(sock, 0.3)
+        print(data)
+        var = gynkana_operations.split_ecuacion(data)
+        if not gynkana_operations.is_open_parenthesis(var[0]) and var[0] != "ERROR":
             break
-        result = int(gynkana_operations.crear_arbol(data.decode()))
+        result = int(gynkana_operations.crear_arbol(data))
         string = "({0})".format(result)
         print("Result is {0}".format(result))
         sock.sendall(string.encode())
 
     sock.close()
-    return data.decode().splitlines()[0]
+    return data.splitlines()[0]
 
 
 def step3(download_file_number):
     file_url = "http://atclab.esi.uclm.es:5000/{}".format(download_file_number)
-    """ FROM HERE """
+    peticion = "GET /{} HTTP/1.1\n" \
+               "Host: http://atclab.esi.uclm.es:5000\n" \
+               "Connection: close\n" \
+               "Accept-Encoding: gzip" \
+               "Accept-Charset: ISO-8859-1,UTF-8;q=0.7,*;q=0.7\n" \
+               "Cache-Control: no-cache\n\n".format(download_file_number)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect(("http://atclab.esi.uclm.es", 5000))
+    sock.send(peticion)
+    data = sock.recv(1600)
+    """ FROM HERE
     h = httplib2.Http(".cache")
     resp, content = h.request(file_url, "GET")
-    """ TO HERE, copied from: https://github.com/jcgregorio/httplib2/wiki/Examples-Python3 """
-    print(content.decode())
-    icmp_data = content.decode().splitlines()[0]
+     TO HERE, copied from: https://github.com/jcgregorio/httplib2/wiki/Examples-Python3 """
+    print(data.decode())
+    icmp_data = data.decode().splitlines()[0]
 
     return icmp_data
 
@@ -71,15 +83,56 @@ def step3(download_file_number):
 def step4(icmp_data):
     sock = socket.socket(socket.AF_INET, socket.SOCK_RAW,
                          socket.getprotobyname("icmp"))
-    payload = icmp_data
     echo_icmp_type = 8
     echo_icmp_code = 0
-    icmp_packet = struct.pack("!BBH", echo_icmp_type, echo_icmp_code, 0) + payload
-    sock.sendto(icmp_packet, addr_uclm_server)
+    timestamp = time.strftime("%H:%M:%S")
+    payload = "{} {}".format(timestamp, icmp_data).encode()
+    icmp_packet = struct.pack("!BBHHH{}s".format(len(payload))
+                              , echo_icmp_type, echo_icmp_code, 0, 0, 1, payload)
+    chk = icmp_checksum.cksum(icmp_packet)
+    icmp_packet = struct.pack("!BBHHH{}s".format(len(payload))
+                              , echo_icmp_type, echo_icmp_code, chk, 0, 1, payload)
+    sock.sendto(icmp_packet, ("atclab.esi.uclm.es", 2000))
+    reply = sock.recv(1600)
+    data = sock.recv(1600)
+    (echo_icmp_type,
+     echo_icmp_code,
+     checksum,
+     x,
+     y,
+     data) = struct.unpack("!bbHHH{}s".format(len(data[8:])), data)
+    first_line = str(data.splitlines()[0]).replace("'", "")
+    code = int(first_line.split(":")[2][2:])
+    print(code)
+    enunciado5step = data.splitlines()[1:]
+    for i in enunciado5step:
+        print(i.decode())
+    return code
+
+
+def recv_all_data(socket, timeout):
+    """ EXTRACTED FROM http://www.binarytides.com/receive-full-data-with-the-recv-socket-function-in-python/"""
+    totaldata = []
+    socket.setblocking(0)
+    begin = time.time()
+    while 1:
+        if totaldata and time.time() - begin > timeout:
+            break
+        try:
+            data = socket.recv(1600)
+            if data:
+                totaldata.append(data.decode())
+                begin = time.time()
+            else:
+                time.sleep(0.001)
+        except:
+            pass
+    return "".join(totaldata)
+
 
 if __name__ == "__main__":
     secret_connexion_number = step0()
     port = step1(secret_connexion_number)
     download_file_number = step2(port)
     icmp_data = step3(download_file_number)
-    step4(icmp_data)
+    ss = step4(icmp_data)
