@@ -4,7 +4,7 @@ from io import StringIO
 import math
 import stack
 import node_binary_tree
-
+import time
 
 def split_ecuacion(cadena):
     list = []
@@ -137,3 +137,21 @@ def is_parentesis_opuesto(parentesis1, parentesis2):
         return False
 
 
+def recv_all_data(socket, timeout):
+    """ EXTRACTED FROM http://www.binarytides.com/receive-full-data-with-the-recv-socket-function-in-python/"""
+    totaldata = []
+    socket.setblocking(0)
+    begin = time.time()
+    while 1:
+        if totaldata and time.time() - begin > timeout:
+            break
+        try:
+            data = socket.recv(1600)
+            if data:
+                totaldata.append(data.decode())
+                begin = time.time()
+            else:
+                time.sleep(0.001)
+        except:
+            pass
+    return "".join(totaldata)
