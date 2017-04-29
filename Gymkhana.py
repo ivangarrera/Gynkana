@@ -7,6 +7,7 @@ import httplib2
 import struct
 import icmp_checksum
 import time
+import multiprocessing
 
 
 class Gymkhana:
@@ -100,9 +101,39 @@ class Gymkhana:
             print(i.decode())
         return code
 
+    def step5(self, connexion_number):
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect(('atclab.esi.uclm.es', 9000))
+        envio = str(connexion_number)+" 40000"
+        sock.sendall(envio.encode())
+        sock.close()
+
+    def proxy_server(self):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(("", 40000))
+        sock.listen(3)
+
+        while True:
+            connection, client_address = sock.accept()
+            multiprocessing.Process(target=self.listening_to_client, args=(connection, client_address)).start()
+
+        sock.close
+
+    def listening_to_client(self, client, address):
+        while True:
+            data = client.recv(1600)
+            if data != "":
+                print(data.decode())
+        client.close
+
+
 g = Gymkhana()
 secret_connexion_number = g.step0()
 port = g.step1(secret_connexion_number)
 download_file_number = g.step2(port)
 icmp_data = g.step3(download_file_number)
 ss = g.step4(icmp_data)
+g.step5(ss)
+p = multiprocessing.Process(target=g.proxy_server(), args=()).start()
+
