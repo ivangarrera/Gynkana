@@ -8,8 +8,11 @@ import struct
 import icmp_checksum
 import time
 import multiprocessing
+import sys
+import os
+import signal
 
-
+pids = []
 class Gymkhana:
 
     def __init__(self):
@@ -107,6 +110,19 @@ class Gymkhana:
         sock.connect(('atclab.esi.uclm.es', 9000))
         envio = str(connexion_number)+" 40000"
         sock.sendall(envio.encode())
+        multiprocessing.Process(target=self.recibe_end, args=(sock,)).start()
+
+    def recibe_end(self, sock):
+        while True:
+            data = sock.recv(1600).decode()
+            if data != "":
+                print(data)
+                print(pids)
+                for pid in pids:
+                    print("Terminating {} process".format(pid))
+                    os.kill(pid)
+                sys.exit(0)
+
         sock.close()
 
     def proxy_server(self):
@@ -115,18 +131,42 @@ class Gymkhana:
         sock.listen(3)
 
         while True:
+            print(os.getpid())
+            pids.append(os.getpid())
             connection, client_address = sock.accept()
-            multiprocessing.Process(target=self.listening_to_client, args=(connection, client_address)).start()
+            p = multiprocessing.Process(target=self.listening_to_client, args=(connection, client_address))
+            p.start()
+            pids.append(p.pid)
+            print("Enviado\n\n")
+
+        resp = connection.recv(1600).decode()
+        print(resp)
 
         sock.close
 
     def listening_to_client(self, client, address):
         while True:
-            data = client.recv(1600)
+            data = client.recv(1600).decode()
             if data != "":
-                print(data.decode())
+                print(data)
+                data_splited = data.splitlines()
+                host = data_splited[2].replace("Host: ", "")
+                response = self.get_http_resources(host, data)
+                client.sendall(response.encode())
+            break
+
         client.close
 
+    def get_http_resources(self, host, data):
+        http_request = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        http_request.connect((host, 80))
+        http_request.sendall(data.encode())
+        response = gymkhana_operations.recv_all_data(http_request, 0.3)
+
+        return response
+
+    def handler(self):
+        print('Terminating Gymkhana...')
 
 g = Gymkhana()
 secret_connexion_number = g.step0()
