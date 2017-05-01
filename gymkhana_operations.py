@@ -1,10 +1,12 @@
 import tokenize
+import socket
 import re
 from io import StringIO
 import math
 import stack
 import node_binary_tree
 import time
+
 
 def split_ecuacion(cadena):
     list = []
@@ -150,8 +152,24 @@ def recv_all_data(socket, timeout):
             if data:
                 totaldata.append(data.decode())
                 begin = time.time()
-            else:
-                time.sleep(0.001)
         except:
             pass
     return "".join(totaldata)
+
+
+def get_http_resources(host, data):
+    http_request = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    http_request.connect((host, 80))
+    http_request.sendall(data.encode())
+    response = recv_all_data(http_request, 0.5)
+
+    return response
+
+
+def receive_end(sock):
+    while True:
+        data = sock.recv(1600).decode()
+        if data != "":
+            print(data)
+            exit(0)
+        sock.close()

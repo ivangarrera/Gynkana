@@ -1,4 +1,4 @@
-48982
+63591
 You passed the step 0!
 (The maximum score (in the best case) is indicated )
 
@@ -16,9 +16,9 @@ Step 1: UDP
 
 - Create a UDP server on your machine (on the port you want)
 - Send a message to the UDP server atclab.esi.uclm.es: 2000
-  indicating the identifier "48982" and the port on which you have created
+  indicating the identifier "63591" and the port on which you have created
   your UDP server, separated by a space.
-  Example: "48982 7777" (without quotes).
+  Example: "63591 7777" (without quotes).
 
 Your UDP server will receive the instructions to continue.
 You have 4 seconds.
@@ -27,13 +27,13 @@ Hints:
 - Check that it is possible to connect to your UDP server from a machine with
   a public IP (use netcat to check that).
 
-1990
+1929
 You passed the step 1!
 
 Etapa 2: Aritmetic
 ------------------
 
-- Connect to server atclab.esi.uclm.es:1990
+- Connect to server atclab.esi.uclm.es:1929
 - You will receive a text string with a mathematical operation in ASCII format.
 - The expression contains parentheses and brackets, and are well balanced (there
   are so many opening and closure).
@@ -57,22 +57,39 @@ Restrictions:
 
 You have 20 seconds.
 
-[[86/ (17 * 34)]+ 89]
-Result is 89
-[{21*25}* 46]
-Result is 24150
-({70 *{72 *69}}+[[[59 +0]/ {47 *31}] -39])
-Result is 347721
-(76 -{{74 / 70}- [9 - {56-40}]})
-Result is 68
-39126
+
+ [1+ 81]
+Result is 82
+
+
+ ([{(94/ 57)/[30-40]} + [32*72]]+ (48 /{24+36}))
+Result is 2303
+
+
+ [[16+ (65 + [73/83])] * 0]
+Result is 0
+
+
+ (79-(4 - 98))
+Result is 173
+
+
+ {[80 -[52 * 15]]-{(57 - 85)-[12 - 22]}}
+Result is -682
+
+
+ [10 * {46 +{88 -{81 + 27}}}]
+Result is 260
+
+
+ 35832
 You passed the step 2!
 
 Step 3: HTTP Client
 ---------------------
 
 - You must download the file
-  "http://atclab.esi.uclm.es:5000/39126".
+  "http://atclab.esi.uclm.es:5000/35832".
 
 The file contains the instructions to continue.
 You have 6 seconds.
@@ -80,7 +97,7 @@ You have 6 seconds.
 Restrictions:
 - It is not allowed to use urllib, urllib2 and urllib3 modules.
 
-74309
+72814
 You passed the step 3!
 
 Step 4: Ping
@@ -88,11 +105,11 @@ Step 4: Ping
 
 - You must send an ICMP Echo Request message to atclab.esi.uclm.es.
   the payload of this message must include, AFTER the usual
-  content, the ASCII string "74309".
+  content, the ASCII string "72814".
 
      +--------------+----------------------------+
      | Echo Request |                            |
-     | Header       | timestamp(8 bytes) + 74309 |
+     | Header       | timestamp(8 bytes) + 72814 |
      +--------------+----------------------------+
 
 - You will receive an ICMP Echo Reply message with the instructions to
@@ -114,7 +131,7 @@ Hints:
 - Constructs the ICMP message indicating a 0 in the checksum field. Calculate the
   checksum and rebuilds the message using the calculation result.
 
-11:04:5742935
+46005
 You passed the step 4!
 
 Step 5: Proxy Web
@@ -139,9 +156,9 @@ Step 5: Proxy Web
 
 
 - Create a client socket and send a message to the server TCP atclab.esi.uclm.es:9000
-  Indicating the identifier "42935" and the port on which you have created
+  Indicating the identifier "46005" and the port on which you have created
   Your proxy server, separated by a space.
-  Example: "42935 7777".
+  Example: "46005 7777".
 - Through the same socket you will receive further instructions or information
   about errors.
 
@@ -151,3 +168,115 @@ Hints:
   achieve it create a concurrent server for your proxy.
 - You can prove that your proxy is right by executing it as a independent program
   (unrelated to gink
+
+---------- Enviando petición HTTP... ----------
+ GET http://www.ietf.org/rfc/rfc864.txt HTTP/1.1
+Accept-Encoding: identity
+Host: www.ietf.org
+Connection: close
+User-Agent: Python-urllib/2.7
+
+ ---------- Petición enviada. ------------
+
+
+---------- Enviando petición HTTP... ----------
+ GET http://www.ietf.org/rfc/rfc3286.txt HTTP/1.1
+Accept-Encoding: identity
+Host: www.ietf.org
+Connection: close
+User-Agent: Python-urllib/2.7
+
+ ---------- Petición enviada. ------------
+
+
+---------- Enviando petición HTTP... ----------
+ GET http://www.ietf.org/rfc/rfc3207.txt HTTP/1.1
+Accept-Encoding: identity
+Host: www.ietf.org
+Connection: close
+User-Agent: Python-urllib/2.7
+
+ ---------- Petición enviada. ------------
+
+
+---------- Enviando petición HTTP... ----------
+ GET http://www.ietf.org/rfc/rfc3031.txt HTTP/1.1
+Accept-Encoding: identity
+Host: www.ietf.org
+Connection: close
+User-Agent: Python-urllib/2.7
+
+ ---------- Petición enviada. ------------
+
+
+---------- Enviando petición HTTP... ----------
+ GET http://www.ietf.org/rfc/rfc765.txt HTTP/1.1
+Accept-Encoding: identity
+Host: www.ietf.org
+Connection: close
+User-Agent: Python-urllib/2.7
+
+ ---------- Petición enviada. ------------
+
+
+---------- Enviando petición HTTP... ----------
+ GET http://www.ietf.org/rfc/rfc850.txt HTTP/1.1
+Accept-Encoding: identity
+Host: www.ietf.org
+Connection: close
+User-Agent: Python-urllib/2.7
+
+ ---------- Petición enviada. ------------
+
+
+---------- Enviando petición HTTP... ----------
+ GET http://www.ietf.org/rfc/rfc1058.txt HTTP/1.1
+Accept-Encoding: identity
+Host: www.ietf.org
+Connection: close
+User-Agent: Python-urllib/2.7
+
+ ---------- Petición enviada. ------------
+
+
+---------- Enviando petición HTTP... ----------
+ GET http://www.ietf.org/rfc/rfc172.txt HTTP/1.1
+Accept-Encoding: identity
+Host: www.ietf.org
+Connection: close
+User-Agent: Python-urllib/2.7
+
+ ---------- Petición enviada. ------------
+
+
+---------- Enviando petición HTTP... ----------
+ GET http://www.ietf.org/rfc/rfc2251.txt HTTP/1.1
+Accept-Encoding: identity
+Host: www.ietf.org
+Connection: close
+User-Agent: Python-urllib/2.7
+
+ ---------- Petición enviada. ------------
+
+
+---------- Enviando petición HTTP... ----------
+ GET http://www.ietf.org/rfc/rfc959.txt HTTP/1.1
+Accept-Encoding: identity
+Host: www.ietf.org
+Connection: close
+User-Agent: Python-urllib/2.7
+
+ ---------- Petición enviada. ------------
+
+
+---------- Enviando petición HTTP... ----------
+ GET http://www.ietf.org/rfc/rfc2058.txt HTTP/1.1
+Accept-Encoding: identity
+Host: www.ietf.org
+Connection: close
+User-Agent: Python-urllib/2.7
+
+ ---------- Petición enviada. ------------
+
+46145
+Congratulations, you have completed all the steps!

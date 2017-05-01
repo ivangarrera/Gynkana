@@ -8,11 +8,8 @@ import struct
 import icmp_checksum
 import time
 import multiprocessing
-import sys
-import os
-import signal
 
-pids = []
+
 class Gymkhana:
 
     def __init__(self):
@@ -25,12 +22,10 @@ class Gymkhana:
         sock.connect(address)
 
         data = sock.recv(1600).decode()
-        vector = data.splitlines()
-        secret_connexion_number = vector[0]
         print(data)
 
         sock.close()
-        return secret_connexion_number
+        return data.splitlines()[0]
 
     def step1(self, secret_connexion_number):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -38,12 +33,12 @@ class Gymkhana:
         sock.bind(server_address)
         address = ('atclab.esi.uclm.es', 2000)
 
-        msg = str(secret_connexion_number) + " 50000"
+        msg = secret_connexion_number + " 50000"
         sock.sendto(msg.encode(), address)
-        data, information = sock.recvfrom(1600)
-        print(data.decode())
+        data = sock.recv(1600).decode()
+        print(data)
         sock.close()
-        return int(data.decode().splitlines()[0])
+        return int(data.splitlines()[0])
 
     def step2(self, port):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -52,13 +47,13 @@ class Gymkhana:
 
         while 1:
             data = gymkhana_operations.recv_all_data(sock, 0.3)
-            print(data)
+            print("\n", data)
             var = gymkhana_operations.split_ecuacion(data)
-            if not gymkhana_operations.is_open_parenthesis(var[0]) and var[0] != "ERROR":
+            if not gymkhana_operations.is_open_parenthesis(var[0]):
                 break
             result = int(gymkhana_operations.crear_arbol(data))
             string = "({})".format(result)
-            print("Result is {}".format(result))
+            print("Result is {}\n".format(result))
             sock.sendall(string.encode())
 
         sock.close()
@@ -110,70 +105,46 @@ class Gymkhana:
         sock.connect(('atclab.esi.uclm.es', 9000))
         envio = str(connexion_number)+" 40000"
         sock.sendall(envio.encode())
-        multiprocessing.Process(target=self.recibe_end, args=(sock,)).start()
-
-    def recibe_end(self, sock):
-        while True:
-            data = sock.recv(1600).decode()
-            if data != "":
-                print(data)
-                print(pids)
-                for pid in pids:
-                    print("Terminating {} process".format(pid))
-                    os.kill(pid)
-                sys.exit(0)
-
-        sock.close()
+        multiprocessing.Process(target=gymkhana_operations.receive_end, args=(sock,)).start()
 
     def proxy_server(self):
+        lock = multiprocessing.Lock()
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind(("", 40000))
         sock.listen(3)
-
-        while True:
-            print(os.getpid())
-            pids.append(os.getpid())
-            connection, client_address = sock.accept()
-            p = multiprocessing.Process(target=self.listening_to_client, args=(connection, client_address))
-            p.start()
-            pids.append(p.pid)
-            print("Enviado\n\n")
-
-        resp = connection.recv(1600).decode()
-        print(resp)
+        try:
+            while True:
+                sock.settimeout(6)
+                connection, client_address = sock.accept()
+                multiprocessing.Process(target=self.listening_to_client, args=(connection, lock)).start()
+        except socket.timeout:
+            pass
 
         sock.close
 
-    def listening_to_client(self, client, address):
+    def listening_to_client(self, client, lock):
         while True:
             data = client.recv(1600).decode()
             if data != "":
-                print(data)
+                lock.acquire()
+                print("\n---------- Enviando petición HTTP... ----------\n",
+                      data, "---------- Petición enviada. ------------\n")
+                lock.release()
                 data_splited = data.splitlines()
                 host = data_splited[2].replace("Host: ", "")
-                response = self.get_http_resources(host, data)
+                response = gymkhana_operations.get_http_resources(host, data)
                 client.sendall(response.encode())
             break
 
         client.close
 
-    def get_http_resources(self, host, data):
-        http_request = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        http_request.connect((host, 80))
-        http_request.sendall(data.encode())
-        response = gymkhana_operations.recv_all_data(http_request, 0.3)
-
-        return response
-
-    def handler(self):
-        print('Terminating Gymkhana...')
 
 g = Gymkhana()
 secret_connexion_number = g.step0()
 port = g.step1(secret_connexion_number)
 download_file_number = g.step2(port)
 icmp_data = g.step3(download_file_number)
-ss = g.step4(icmp_data)
-g.step5(ss)
+code = g.step4(icmp_data)
+g.step5(code)
 p = multiprocessing.Process(target=g.proxy_server(), args=()).start()
 
