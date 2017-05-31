@@ -60,14 +60,13 @@ class Gymkhana:
         return data.splitlines()[0]
 
     def step3(self, download_file_number):
-        file_url = "http://atclab.esi.uclm.es:5000/{}".format(download_file_number)
-        """ FROM HERE """
-        h = httplib2.Http(".cache")
-        resp, content = h.request(file_url, "GET")
-        """ TO HERE, copied from: https://github.com/jcgregorio/httplib2/wiki/Examples-Python3 """
-        print(content.decode())
-        icmp_data = content.decode().splitlines()[0]
-
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        direccion = 'atclab.esi.uclm.es'
+        sock.connect((direccion, 5000))
+        sock.sendall("GET /{} HTTP/1.1\r\nHost: atclab.esi.uclm.es\r\n\n".format(download_file_number).encode())
+        content = gymkhana_operations.recv_all_data(sock, 0.3)
+        print(content)
+        icmp_data = content.splitlines()[5]
         return icmp_data
 
     def step4(self, icmp_data):
